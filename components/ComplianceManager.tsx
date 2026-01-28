@@ -4,8 +4,9 @@ import {
   CheckCircle2, AlertTriangle, Upload, FileText, Clock, 
   ChevronRight, Calendar, Scale, Microscope, Flame, Globe, Droplets, Factory, X, Loader2
 } from 'lucide-react';
-import { ComplianceTask, EvidenceDoc } from '../types'; // Note: Type definitions might need update to match API
+import { ComplianceTask, EvidenceDoc } from '../types';
 import DynamicEmissionForm from './DynamicEmissionForm';
+import EvidenceVault from './EvidenceVault';
 
 type IndustryType = 'ceramic' | 'tomato';
 
@@ -63,18 +64,6 @@ const ComplianceManager: React.FC = () => {
     };
     fetchTasks();
   }, [industry]);
-
-  // Fallback static evidence for demo
-  const ceramicEvidence = [
-    {
-      id: 'official',
-      title: 'Official Reports (SILiAmb)',
-      icon: <Globe className="w-5 h-5 text-blue-600" />,
-      docs: [
-        { id: 'd1', name: 'Relatorio_Emissoes_2023.pdf', type: 'RE', status: 'verified', dateUploaded: '2024-03-15' },
-      ] as EvidenceDoc[]
-    }
-  ];
 
   return (
     <div className="flex h-full flex-col relative">
@@ -220,13 +209,9 @@ const ComplianceManager: React.FC = () => {
             </div>
           )}
 
-          {/* Evidence View (Simplified for now) */}
+          {/* Evidence View (Using New EvidenceVault Component) */}
           {activeTab === 'evidence' && (
-            <div className="space-y-6">
-                <div className="bg-white p-8 text-center border border-slate-200 rounded-xl text-slate-400">
-                    Evidence Vault connected to S3 (Mock)
-                </div>
-            </div>
+            <EvidenceVault installationId={1} year={2024} />
           )}
         </div>
 

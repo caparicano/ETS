@@ -61,10 +61,22 @@ export interface ComplianceTask {
   category: 'Data' | 'Admin' | 'Surrender';
 }
 
+export enum APADocumentType {
+  RELATORIO_EMISSOES = "relatorio_emissoes",
+  PARECER_VERIFICACAO = "parecer_verificacao",
+  FATURAS_GAS_NATURAL = "faturas_gas_natural",
+  ANALISE_CARBONATOS_ARGILA = "analise_carbonatos_argila",
+  CERTIFICADO_CALIBRACAO_BALANCA = "certificado_calibracao_balanca",
+  CERTIFICADO_SUSTENTABILIDADE_BIOMASSA = "certificado_sustentabilidade_biomassa"
+}
+
 export interface EvidenceDoc {
-  id: string;
-  name: string;
-  type: string;
-  status: 'verified' | 'pending' | 'rejected';
-  dateUploaded: string;
+  id: number;
+  filename: string;
+  document_type: string;
+  status: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'LOCKED' | 'OCR_FAILED';
+  upload_date: string;
+  version: number;
+  extracted_text_snippet?: string;
+  message?: string;
 }

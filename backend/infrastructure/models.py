@@ -22,6 +22,7 @@ class DocStatus(str, enum.Enum):
     VERIFIED = "VERIFIED"
     REJECTED = "REJECTED"
     LOCKED = "LOCKED"
+    OCR_FAILED = "OCR_FAILED" # New status
 
 class TaskStatus(str, enum.Enum):
     PENDING = "PENDING"
@@ -321,6 +322,10 @@ class Document(Base):
     status = Column(Enum(DocStatus), default=DocStatus.PENDING)
     version = Column(Integer, default=1)
     extracted_metadata = Column(JSON, default={})
+    
+    # New column for OCR results
+    extracted_text = Column(Text, nullable=True)
+    
     uploaded_by_id = Column(Integer, ForeignKey("users.id"))
     installation_id = Column(Integer, ForeignKey("installations.id"))
 

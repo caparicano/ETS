@@ -2,7 +2,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
 from datetime import datetime, date
-from backend.infrastructure.models import TaskStatus
+from backend.infrastructure.models import TaskStatus, DocStatus
 
 class TraceableCalculation(BaseModel):
     """The output of any compliance calculation. Must include the 'Why'."""
@@ -59,3 +59,17 @@ class TaskResponse(BaseModel):
 class NextDeadlineResponse(BaseModel):
     task: Optional[TaskResponse] = None
     days_remaining: Optional[int] = None
+
+# --- Phase 1.4 Document Schemas ---
+
+class DocumentResponse(BaseModel):
+    id: int
+    filename: str
+    document_type: str
+    reporting_year: int
+    status: DocStatus
+    version: int
+    upload_date: datetime
+    extracted_text_snippet: Optional[str] = None
+    file_path: str # In real app, this might be a presigned URL
+    locked_at: Optional[datetime] = None
