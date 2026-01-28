@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with Audit Extension
+  db:
+    image: postgres:15-alpine
+    container_name: ceramets_db
+    environment:
+      POSTGRES_USER: ceramets_user
+      POSTGRES_PASSWORD: secure_password_dev
+      POSTGRES_DB: ceramets_core
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # In a real production image, we would install pgaudit here. 
+    # For MVP alpine, we rely on standard logging, but architecture supports extension.
+    command: ["postgres", "-c", "log_statement=all"] 
+
+  # Python Backend (FastAPI)
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ceramets_api
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://ceramets_user:secure_password_dev@db:5432/ceramets_core
+      - ENVIRONMENT=development
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
