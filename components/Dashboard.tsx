@@ -7,6 +7,7 @@ import {
 import { AlertCircle, CheckCircle2, TrendingUp, Zap, Factory, Plus } from 'lucide-react';
 import { ETSMetric, StrategicAdvice } from '../types';
 import SetupWizard from './SetupWizard';
+import { useGuideSection } from './guide/GuideContext';
 
 interface DashboardProps {
   data: {
@@ -32,7 +33,21 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
     { title: "Waste Heat Recovery", description: "Install heat exchangers to preheat drying air using kiln exhaust.", impact: "Medium", cost: "$$", timeframe: "1 Year" },
   ];
 
+  const usingExampleData = !data?.metrics;
   const summary = data?.summary || "Based on initial data, your installation faces a significant reduction in Free Allocation starting 2026 due to the new benchmarking rules for ceramic products. Immediate action is required to reduce specific emissions per ton of product.";
+
+  useGuideSection('painel', {
+    origemDados: usingExampleData ? 'dados de exemplo (sem Finalize Strategy)' : 'gerado a partir da conversa no AI Consultant',
+    assistenteAberto: showWizard,
+    resumo: summary,
+    metricas: metrics.map((m) => ({
+      ano: m.year,
+      emissoesVerificadas_tCO2: m.verifiedEmissions,
+      licencasGratuitas_EUA: m.freeAllocation,
+      precoCarbono_EUR_t: m.carbonPrice,
+    })),
+    roteiro: advice.map((a) => ({ medida: a.title, impacto: a.impact, custo: a.cost, prazo: a.timeframe })),
+  });
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8 relative">

@@ -140,7 +140,7 @@ def test_per_user_rate_limit_returns_429(monkeypatch):
     {"pergunta": "x" * 2001},
     {"historico": [{"role": "user", "content": "x"}] * 41},
     {"historico": [{"role": "system", "content": "x"}]},
-    {"contexto": dict(CTX, estados={"a": "x" * 2100})},
+    {"contexto": dict(CTX, estados={"a": "x" * 8100})},
     {"contexto": dict(CTX, elementosVisiveis=["y" * 81])},
 ])
 def test_validation_rejects_bad_requests(over):
@@ -198,3 +198,57 @@ def test_guide_service_is_isolated_from_database_and_domain():
             for m in mods:
                 assert not m.startswith(forbidden), f"{name} importa {m}"
                 assert not m.startswith("backend.domain") or m in allowed_domain, f"{name} importa {m}"
+
+
+# --- Manual do guia (docs/guia) -------------------------------------------------
+
+import re
+
+REPO = Path(__file__).resolve().parents[2]
+GUIA = REPO / "docs" / "guia"
+
+# Citações no manual que, de propósito, não são texto da interface.
+NOT_UI_LABELS = {
+    "High/Medium Impact",                              # resume duas etiquetas
+    "Tier X", "Method: Standard • Tier X",             # compostos com o valor do tier
+    "Indexed",                                         # capitalizado no código a partir do estado
+    "pending", "completed", "overdue",                 # estados em minúsculas no código
+    "Evidence Vault (ano)",                            # título composto com o ano
+    "Regulation (EU) 2018/2066 (MRR) • Article 38",    # etiqueta composta com a citação
+    "Campaign Status: OFF-SEASON",                     # texto partido entre elementos
+    "Generate RE Draft", "Verifier Access",            # funcionalidades que ainda não existem
+}
+
+
+def _ui_source() -> str:
+    files = list((REPO / "components").rglob("*.tsx")) + [REPO / "App.tsx"]
+    return "\n".join(f.read_text(encoding="utf-8") for f in files)
+
+
+def test_every_screen_has_a_manual_page():
+    views = re.findall(r"(\w+) = '\1'", (REPO / "types.ts").read_text())
+    assert views, "não encontrei o enum AppView"
+    pages = "\n".join(p.read_text(encoding="utf-8") for p in (GUIA / "ecras").glob("*.md"))
+    for view in views:
+        assert f"Código do ecrã: `{view}`" in pages, f"ecrã {view} sem página em docs/guia/ecras"
+
+
+def test_manual_ui_labels_exist_in_the_interface():
+    """Cada "rótulo" citado no manual dos ecrãs tem de existir no código (evita manual desatualizado)."""
+    src = _ui_source()
+    missing = []
+    for page in (GUIA / "ecras").glob("*.md"):
+        for label in re.findall(r'"([^"\n]{1,60})"', page.read_text(encoding="utf-8")):
+            label = label.rstrip(".…")
+            if label in NOT_UI_LABELS or label.endswith("..."):
+                continue
+            if label not in src:
+                missing.append(f"{page.name}: {label}")
+    assert not missing, "Rótulos do manual que não existem na interface:\n" + "\n".join(missing)
+
+
+def test_manual_fits_in_a_reasonable_prompt():
+    guide_service.load_knowledge.cache_clear()
+    knowledge = guide_service.load_knowledge()
+    assert "Glossário" in knowledge and "Evidence Vault" in knowledge
+    assert len(knowledge) < 120_000  # ~30k tokens; acima disto, rever (RAG ou dividir)

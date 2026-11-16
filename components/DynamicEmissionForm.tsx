@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Info, Calculator, Save, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useGuideSection } from './guide/GuideContext';
 
 interface SchemaProperty {
   type: string;
@@ -76,6 +77,20 @@ const DynamicEmissionForm: React.FC<DynamicEmissionFormProps> = ({ sourceStreamI
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<any | null>(null);
+
+  useGuideSection('formularioRegisto', {
+    fluxoFonte: definition?.source_stream_name ?? null,
+    campos: definition
+      ? Object.entries(definition.json_schema.properties).map(([key, p]) => ({
+          campo: p.title,
+          unidade: p.unit,
+          obrigatorio: definition.json_schema.required?.includes(key) ?? false,
+          valorPreenchido: formData[key] ?? null,
+        }))
+      : [],
+    aCalcular: submitting,
+    resultado: result ? { tCO2: result.calculated_tco2, formula: result.calculation_trace.formula } : null,
+  });
 
   useEffect(() => {
     const load = async () => {

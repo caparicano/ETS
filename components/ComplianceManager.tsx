@@ -7,6 +7,7 @@ import {
 import { ComplianceTask, EvidenceDoc } from '../types';
 import DynamicEmissionForm from './DynamicEmissionForm';
 import EvidenceVault from './EvidenceVault';
+import { useGuideSection } from './guide/GuideContext';
 
 type IndustryType = 'ceramic' | 'tomato';
 
@@ -29,6 +30,22 @@ const ComplianceManager: React.FC = () => {
   const [tasks, setTasks] = useState<APITask[]>([]);
   const [loading, setLoading] = useState(false);
   const [nextDeadline, setNextDeadline] = useState<{date: string, days: number} | null>(null);
+
+  useGuideSection('compliance', {
+    separador: activeTab === 'tasks' ? 'Pending Tasks' : 'Evidence Vault',
+    setor: industry === 'ceramic' ? 'Cerâmica' : 'Agro-Alimentar (tomate)',
+    etapaAtual: 'Data Collection',
+    proximoPrazo: nextDeadline ? { data: nextDeadline.date, diasRestantes: nextDeadline.days } : null,
+    aCarregar: loading,
+    tarefas: tasks.map((t) => ({
+      titulo: t.title,
+      estado: t.status,
+      prazo: t.due_date,
+      categoria: t.category,
+      abreFormulario: t.task_code.includes('monthly'),
+    })),
+    formularioAberto: selectedTask ? selectedTask.title : null,
+  });
 
   // --- FETCH DATA ---
   useEffect(() => {

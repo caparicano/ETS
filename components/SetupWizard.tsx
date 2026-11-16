@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Bot, User, Upload, CheckCircle2, Factory, FileText, ArrowRight, Loader2 } from 'lucide-react';
+import { useGuideSection } from './guide/GuideContext';
 
 interface WizardProps {
   onComplete: () => void;
@@ -19,6 +20,15 @@ const SetupWizard: React.FC<WizardProps> = ({ onComplete, onCancel }) => {
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [previewData, setPreviewData] = useState<any>(null);
+
+  const STEP_LABELS = { upload: 'Upload TEGEH Permit', chat: 'conversa', preview: 'Configuration Ready' } as const;
+  const lastAiMessage = [...messages].reverse().find((m) => m.role === 'ai');
+  useGuideSection('assistenteConfiguracao', {
+    passo: STEP_LABELS[step],
+    aProcessar: loading,
+    ultimaPerguntaDoAssistente: lastAiMessage?.text ?? null,
+    preVisualizacao: previewData,
+  });
 
   // MOCK API for Demo purposes
   // In real integration, replace with fetch calls to /api/v1/wizard/...

@@ -40,7 +40,7 @@ class GuideScreenContext(BaseModel):
     @field_validator("estados")
     @classmethod
     def _small_states(cls, v: Dict[str, Any]) -> Dict[str, Any]:
-        if len(json.dumps(v)) > 2000:
+        if len(json.dumps(v, ensure_ascii=False)) > 8000:
             raise ValueError("estados demasiado grandes")
         return v
 

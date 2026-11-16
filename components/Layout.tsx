@@ -1,7 +1,7 @@
 import React from 'react';
 import { AppView } from '../types';
 import GuidePanel from './guide/GuidePanel';
-import { useGuideContext } from './guide/GuideContext';
+import { useGuideScreen } from './guide/GuideContext';
 import { Leaf, MessageSquare, BarChart3, Settings, ShieldCheck, FileCheck, BookOpen, Search } from 'lucide-react';
 
 interface LayoutProps {
@@ -19,8 +19,8 @@ const VIEW_TITLES: Record<AppView, string> = {
 };
 
 const Layout: React.FC<LayoutProps> = ({ currentView, setView, children }) => {
-  // Contexto base para o guia; cada ecrã pode enriquecê-lo com useGuideContext (S2).
-  useGuideContext({ ecra: currentView, titulo: VIEW_TITLES[currentView], elementosVisiveis: [], estados: {} });
+  // Ecrã atual para o guia; cada ecrã acrescenta o que mostra com useGuideSection.
+  useGuideScreen(currentView, VIEW_TITLES[currentView]);
 
   const navItemClass = (view: AppView) =>
     `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer ${

@@ -1,6 +1,6 @@
 # Arquitetura — Guia Claude (assistente do utilizador dentro do CeramETS)
 
-> Estado: **S1 implementado** (esqueleto); S2–S4 por fazer · Data: 2026-11-16
+> Estado: **S1 e S2 implementados**; S3–S4 por fazer · Data: 2026-11-16
 
 ## 1. Objetivo
 
@@ -66,7 +66,9 @@ Um painel lateral dentro do CeramETS, semelhante ao Claude no Excel ou no Chrome
 }
 ```
 
-Regra de privacidade: por omissão envia-se **estrutura e estados, não valores** (sem leituras de contador, nomes de ficheiros ou dados de emissões). Uma *flag* `GUIDE_SEND_FIELD_VALUES` permite ativar o envio de valores mais tarde, se for aprovado.
+Privacidade: **decidido em 2026-11-16 que o guia recebe também os valores visíveis** (tarefas, nomes de ficheiros, leituras escritas nos formulários, métricas do painel). Não se envia o texto das conversas do AI Consultant nem dados pessoais. Textos longos são cortados a 200 caracteres e listas a 20 itens (`compact` em `GuideContext.tsx`).
+
+Cada componente declara o que mostra com `useGuideSection(chave, dados)`. A secção desaparece quando o componente sai do ecrã, por isso o Evidence Vault (dentro da Compliance Tool) e o assistente de configuração (dentro do Strategy & Data) juntam-se ao contexto do ecrã que os contém, sem se sobreporem.
 
 **Integração no layout:** `Layout.tsx` monta o `GuidePanel` uma única vez. Cada ecrã acrescenta `useGuideContext(...)` e os atributos `data-guide-id`. Não muda a lógica de nenhum ecrã.
 
@@ -155,7 +157,7 @@ client.messages.stream(
 | Chave API | Só no servidor (`ANTHROPIC_API_KEY`). Remover também a injeção da chave Gemini no `vite.config.ts` (risco já existente). |
 | Autenticação | O endpoint exige o JWT existente (`get_current_user`). |
 | Abuso e custos | Limite por utilizador (ex.: 30 pedidos/10 min), pergunta com no máximo 2 000 caracteres e `max_tokens` limitado. |
-| Dados enviados | Estrutura do ecrã e estados; nunca valores, por omissão. Sem PII. |
+| Dados enviados | Estrutura do ecrã e valores visíveis (decisão de 2026-11-16), até 8 000 caracteres. Sem PII nem conversas do AI Consultant. |
 | Injeção de instruções | O conteúdo vindo do ecrã entra como dados (`<contexto_ecra>…</contexto_ecra>`), nunca no `system`. A ferramenta só aceita alvos da lista fechada. |
 | Retenção | Confirmar as condições de retenção da conta Anthropic da organização antes de produção (RGPD). |
 | Auditoria | Registam-se metadados (utilizador, ecrã, *tokens*, latência), não o texto das conversas. |
@@ -193,7 +195,7 @@ Proposta: começar a avaliação (Sprint 4) com o **Haiku 5.5** e comparar com o
 | Sprint | Âmbito | Motor recomendado |
 |---|---|---|
 | **S1 — Esqueleto** | `guide.py` + `guide_service.py` com *streaming* SSE, `GuidePanel` no `Layout`, autenticação e limites, e remoção da chave do bundle | **Sonnet 5.5** |
-| **S2 — Conhecimento e contexto** | `docs/guia/` (instruções, glossário, um ficheiro por ecrã), `useGuideContext` em todos os ecrãs, prompt caching | **Sonnet 5.5** (redação do manual revista por quem conhece o ETS) |
+| **S2 — Conhecimento e contexto** | `docs/guia/` (instruções, glossário, um ficheiro por ecrã), `useGuideSection` em todos os ecrãs, prompt caching | **Sonnet 5.5** (redação do manual revista por quem conhece o ETS); feito em Opus 5.5 por escolha do utilizador |
 | **S3 — Visita guiada** | `targets.ts`, `data-guide-id`, ferramenta `destacar_elemento`, `Highlighter` | **Sonnet 5.5** |
 | **S4 — Avaliação e afinação** | Conjunto de perguntas, comparação Haiku vs Sonnet, custos, revisão de segurança e privacidade | **Opus 5.5** |
 
@@ -207,12 +209,21 @@ Proposta: começar a avaliação (Sprint 4) com o **Haiku 5.5** e comparar com o
 
 **Não incluído no S1, de propósito:**
 - **Remoção da chave Gemini do bundle.** O ecrã *AI Consultant* ainda chama o Gemini diretamente do browser (`services/geminiService.ts`); remover a chave deixaria esse ecrã sem funcionar. Fica para quando o AI Consultant passar a usar o backend.
-- **Fallback de recusa (`fallbacks`)** e **cache real do manual:** o manual atual é curto e fica abaixo do mínimo cacheável; passa a contar quando o S2 o encher. Valida-se `usage.cache_read_input_tokens` no S4.
+- **Fallback de recusa (`fallbacks`):** fica para o S4. O Haiku 5.5 não tem *fallback* do lado do servidor; só se aplica se o modelo final for Sonnet ou Opus 5.5.
 - **Teste com a API real:** nesta sessão não havia chave, por isso o cliente Claude foi simulado nos testes. Falta um pedido real antes de produção.
 
-## 11. Decisões pendentes
+**S2 (feito):**
+- Manual completo em `docs/guia/`: instruções, glossário (siglas, estados de documentos e tarefas), uma página por ecrã (`ecras/`) e quatro fluxos (`fluxos/`). Cerca de 25 mil caracteres (~7–8 mil *tokens*), todo no *system prompt*. Fica acima do mínimo cacheável do Haiku 5.5 (512 *tokens*), por isso é servido da cache a partir do segundo pedido. Confirmar com `usage.cache_read_input_tokens` no primeiro teste real.
+- O manual descreve **só o que existe** e marca o que ainda não funciona (por exemplo os botões "Preview"/"Delete", "Re-Index", o arrastar e largar). O guia está instruído a não prometer funcionalidades marcadas como "ainda não disponível".
+- Contexto com valores em todos os ecrãs (`useGuideSection`), verificado no browser ecrã a ecrã.
+- Testes novos (21 no total): cada ecrã do `AppView` tem página no manual, e **cada rótulo citado no manual existe no código da interface**. Se alguém mudar um botão sem atualizar o manual, este teste falha.
 
+## 11. Decisões
+
+Tomadas:
+- **Valores dos campos:** o guia pode vê-los (2026-11-16).
+- **Manual:** escrito pelo Claude a partir do código dos ecrãs (2026-11-16). Recomenda-se uma revisão por quem usa o ETS no dia a dia.
+
+Pendentes:
 1. Modelo do guia em produção (secção 6).
-2. Se o guia pode ver os **valores** dos campos ou só a estrutura (secção 5).
-3. Língua das respostas: PT-PT fixo, ou acompanhar a língua do utilizador. A interface está hoje em inglês.
-4. Quem escreve e valida o conteúdo de `docs/guia/` (é o que mais determina a qualidade do guia).
+2. Língua das respostas. Por omissão é PT-PT, salvo se o utilizador escrever noutra língua; a interface está em inglês, por isso o guia cita os botões em inglês.

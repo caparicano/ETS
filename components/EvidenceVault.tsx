@@ -5,6 +5,7 @@ import {
   Trash2, Search, Loader2, CheckCircle2, XCircle
 } from 'lucide-react';
 import { EvidenceDoc, APADocumentType } from '../types';
+import { useGuideSection } from './guide/GuideContext';
 
 interface EvidenceVaultProps {
   installationId: number;
@@ -27,6 +28,21 @@ const EvidenceVault: React.FC<EvidenceVaultProps> = ({ installationId, year }) =
   const [uploading, setUploading] = useState(false);
   const [selectedType, setSelectedType] = useState<string>(APADocumentType.FATURAS_GAS_NATURAL);
   const [dragActive, setDragActive] = useState(false);
+
+  useGuideSection('evidenceVault', {
+    ano: year,
+    tipoSelecionado: DOC_TYPE_LABELS[selectedType] ?? selectedType,
+    aCarregarFicheiro: uploading,
+    documentos: documents.map((d) => ({
+      ficheiro: d.filename,
+      tipo: DOC_TYPE_LABELS[d.document_type] ?? d.document_type,
+      estado: d.status,
+      versao: d.version,
+      carregadoEm: d.upload_date,
+      mensagem: d.message,
+      excertoLido: d.extracted_text_snippet,
+    })),
+  });
 
   // Fetch Documents
   const fetchDocuments = async () => {
