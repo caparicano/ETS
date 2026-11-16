@@ -1,5 +1,7 @@
 import React from 'react';
 import { AppView } from '../types';
+import GuidePanel from './guide/GuidePanel';
+import { useGuideContext } from './guide/GuideContext';
 import { Leaf, MessageSquare, BarChart3, Settings, ShieldCheck, FileCheck, BookOpen, Search } from 'lucide-react';
 
 interface LayoutProps {
@@ -8,7 +10,18 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+const VIEW_TITLES: Record<AppView, string> = {
+  [AppView.LANDING]: 'Overview',
+  [AppView.CONSULTATION]: 'AI Consultant',
+  [AppView.DASHBOARD]: 'Strategy & Data',
+  [AppView.COMPLIANCE]: 'Compliance Tool',
+  [AppView.LIBRARY]: 'Regulatory Lib',
+};
+
 const Layout: React.FC<LayoutProps> = ({ currentView, setView, children }) => {
+  // Contexto base para o guia; cada ecrã pode enriquecê-lo com useGuideContext (S2).
+  useGuideContext({ ecra: currentView, titulo: VIEW_TITLES[currentView], elementosVisiveis: [], estados: {} });
+
   const navItemClass = (view: AppView) =>
     `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer ${
       currentView === view
@@ -78,6 +91,7 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, children }) => {
       <main className="flex-1 overflow-auto relative">
         {children}
       </main>
+      <GuidePanel />
     </div>
   );
 };

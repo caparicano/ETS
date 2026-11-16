@@ -1,6 +1,6 @@
 # Arquitetura — Guia Claude (assistente do utilizador dentro do CeramETS)
 
-> Estado: **Proposta** · Data: 2026-11-16
+> Estado: **S1 implementado** (esqueleto); S2–S4 por fazer · Data: 2026-11-16
 
 ## 1. Objetivo
 
@@ -197,7 +197,20 @@ Proposta: começar a avaliação (Sprint 4) com o **Haiku 5.5** e comparar com o
 | **S3 — Visita guiada** | `targets.ts`, `data-guide-id`, ferramenta `destacar_elemento`, `Highlighter` | **Sonnet 5.5** |
 | **S4 — Avaliação e afinação** | Conjunto de perguntas, comparação Haiku vs Sonnet, custos, revisão de segurança e privacidade | **Opus 5.5** |
 
-## 10. Decisões pendentes
+## 10. Estado de implementação
+
+**S1 (feito):**
+- Backend: `POST /api/v1/guide/chat` (SSE), `guide_service.py`, `guide_knowledge.py`, `guide_limits.py` e `docs/guia/00-instrucoes.md`. Autenticação com o JWT existente, limite de 30 pedidos por 10 minutos por utilizador (configurável: `GUIDE_RATE_MAX`, `GUIDE_RATE_WINDOW_SECONDS`), validação de tamanhos e erro 503 se faltar a `ANTHROPIC_API_KEY`.
+- Modelo por omissão: `claude-haiku-5-5` (variável `GUIDE_MODEL`), com `effort: low`.
+- Frontend: `GuidePanel`, `GuideContext`, `services/guideClient.ts`, montados no `Layout`; proxy `/api` no Vite. O token de sessão é lido de `localStorage["ceramets_token"]` (ainda não existe login no frontend).
+- Testes: `backend/tests/test_guide.py` (18 testes, incluindo o de isolamento) e verificação no browser com Playwright.
+
+**Não incluído no S1, de propósito:**
+- **Remoção da chave Gemini do bundle.** O ecrã *AI Consultant* ainda chama o Gemini diretamente do browser (`services/geminiService.ts`); remover a chave deixaria esse ecrã sem funcionar. Fica para quando o AI Consultant passar a usar o backend.
+- **Fallback de recusa (`fallbacks`)** e **cache real do manual:** o manual atual é curto e fica abaixo do mínimo cacheável; passa a contar quando o S2 o encher. Valida-se `usage.cache_read_input_tokens` no S4.
+- **Teste com a API real:** nesta sessão não havia chave, por isso o cliente Claude foi simulado nos testes. Falta um pedido real antes de produção.
+
+## 11. Decisões pendentes
 
 1. Modelo do guia em produção (secção 6).
 2. Se o guia pode ver os **valores** dos campos ou só a estrutura (secção 5).

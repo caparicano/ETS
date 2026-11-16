@@ -2,7 +2,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from backend.infrastructure.database import engine, Base
-from backend.interfaces.api import documents, compliance, tasks, wizard, advisory, verifier
+from backend.interfaces.api import documents, compliance, tasks, wizard, advisory, verifier, guide
 from backend.domain.exceptions import DomainError, RegulatoryComplianceError, TenantAccessError
 
 # Create Tables (for MVP - usually done via Alembic)
@@ -46,6 +46,7 @@ app.include_router(tasks.router)
 app.include_router(wizard.router)
 app.include_router(advisory.router)
 app.include_router(verifier.router)
+app.include_router(guide.router)
 
 @app.get("/")
 def read_root():
