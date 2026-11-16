@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BookOpen, Search, CheckCircle2, RefreshCw, FileText, Database } from 'lucide-react';
 import { RegulatoryDoc } from '../types';
+import { useGuideSection } from './guide/GuideContext';
 
 const RegulatoryLibrary: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,6 +18,11 @@ const RegulatoryLibrary: React.FC = () => {
     doc.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
     doc.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useGuideSection('biblioteca', {
+    pesquisa: searchTerm,
+    documentosVisiveis: filteredDocs.map((d) => ({ titulo: d.title, tipo: d.type, estado: d.status, atualizado: d.lastUpdated })),
+  });
 
   return (
     <div className="p-8 max-w-7xl mx-auto h-full flex flex-col">

@@ -4,6 +4,7 @@ import Consultation from './components/Consultation';
 import Dashboard from './components/Dashboard';
 import ComplianceManager from './components/ComplianceManager';
 import RegulatoryLibrary from './components/RegulatoryLibrary';
+import { GuideProvider } from './components/guide/GuideContext';
 import { AppView } from './types';
 import { ArrowRight, Factory, ShieldCheck, TrendingUp } from 'lucide-react';
 
@@ -52,6 +53,7 @@ const App: React.FC = () => {
   const [reportData, setReportData] = useState<any>(null);
 
   return (
+    <GuideProvider>
     <Layout currentView={view} setView={setView}>
       {view === AppView.LANDING && (
         <Landing onStart={() => setView(AppView.CONSULTATION)} />
@@ -74,6 +76,7 @@ const App: React.FC = () => {
         <RegulatoryLibrary />
       )}
     </Layout>
+    </GuideProvider>
   );
 };
 

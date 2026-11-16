@@ -8,6 +8,8 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        // O guia chama o backend FastAPI (a chave Claude fica só no servidor)
+        proxy: { '/api': 'http://localhost:8000' },
       },
       plugins: [react()],
       define: {

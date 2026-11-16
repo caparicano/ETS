@@ -4,6 +4,7 @@ import { Message, AppView, SourceCitation } from '../types';
 import { createConsultationChat, generateStrategicReport } from '../services/geminiService';
 import { Send, Bot, User, Loader2, FileText, BookOpen, Search } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { useGuideSection } from './guide/GuideContext';
 
 interface ConsultationProps {
   onComplete: (data: any) => void;
@@ -65,6 +66,16 @@ const Consultation: React.FC<ConsultationProps> = ({ onComplete, setView }) => {
   // State for RAG Visualization
   const [activeCitations, setActiveCitations] = useState<SourceCitation[]>([]);
   const [isRetrieving, setIsRetrieving] = useState(false);
+
+  useGuideSection('consultor', {
+    consultorDisponivel: chatSession !== null,
+    numeroMensagens: messages.length,
+    finalizeStrategyAtivo: messages.length >= 3 && !isGeneratingReport,
+    aGerarRelatorio: isGeneratingReport,
+    aPesquisar: isRetrieving,
+    aResponder: isTyping,
+    ultimasCitacoes: activeCitations.map((c) => `${c.docTitle} • ${c.article}`),
+  });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
